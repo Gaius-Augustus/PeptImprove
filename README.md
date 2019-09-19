@@ -288,7 +288,7 @@ python3 PeptImprove.py -g GCF_000953275.1_CD630DERM_genomic_example.fna -n clost
 Example 2:
 python3 PeptImprove.py --genome GCF_000953275.1_CD630DERM_genomic_example.fna --reference_annotation ReferenceAnnotation_example.gtf --use_ref --name clost_diff_example2 --no_optimization --path_to_rawfileparser PATH_TO_RAWFILEPARSER --output_directory PATH_TO_OUTPUT
 
-Output of MakeHub
+Output of PeptImprove
 =================
 
 PeptImprove.py creates a directory that is either named and located as stated via the option --output_directory PATH_TO_OUTPUT or, if no output directory is given, it will create the default output directory "output" as a subdirectory of PeptImprove's directory.
@@ -326,7 +326,7 @@ PeptImprove.py prints information about separate steps on STDOUT. Please let us 
 Citing PeptImprove
 ==============
 
-Lorenz LJ, “A pipeline for prokaryotic genome annotation with peptide data from MS/MS experiments”. Bachelor thesis. 
+Lorenz LJ, “A pipeline for prokaryotic genome annotation with peptide data from MS/MS experiments”. Bachelor thesis at University of Greifswald (2019).
 
 License
 =======
