@@ -67,6 +67,9 @@ parser.add_argument('--extrinsic_cfg',required=False,type=str,
 	help="Option to use a specific Cfg file that is derived from the original one. Elsewise the pipeline's default Cfg file is used.")
 args = parser.parse_args()
 
+# Store path to PeptImprove
+path_to_pipeline, filename1 = os.path.split(str(os.path.abspath(__file__)))
+path_to_pipeline_dir, filename2 = path_to_pipeline.split("/scripts")
 if(args.genome_file):
 	#genome_handle = open(args.genome_file,"r")
 	genome_file_name = args.genome_file
@@ -93,10 +96,11 @@ else:
 hints_filter = 0.001
 if(args.filter_ip):
 	hints_filter = args.filter_ip
-ext_cfg_file = "../config/extrinsic_prok.MP.cfg"
+ext_cfg_file = path_to_pipeline_dir + "/config/extrinsic_prok.MP.cfg"
 if(args.extrinsic_cfg):
 	ext_cfg_file=args.extrinsic_cfg
-ext_cfg_file = os.path.abspath(ext_cfg_file)
+#ext_cfg_file = os.path.abspath(ext_cfg_file)
+print(ext_cfg_file)
 optimize = True
 if(args.no_optimization):
 	optimize = False
@@ -110,6 +114,9 @@ if(args.delete_intermediate):
 transl_table = 11
 if(args.translation_table):
 	transl_table = int(args.translation_table)
+if(transl_table > 33):
+	print("The translation table you chose does not exist. Please choose a different one.")
+	exit(1)
 
 ### ARGUMENTS ###
 
@@ -122,11 +129,6 @@ command1 = command1 + " %d"
 os.system(command1 % os.getpid())
 
 
-# Store path to PeptImprove
-path_to_pipeline, filename1 = os.path.split(str(os.path.abspath(__file__)))
-#path_to_call_location = os.getcwd()
-#if(not re.search(r"^/",path_to_output)):
-#	path_to_output = path_to_call_location + "/" + path_to_output
 ### BEGIN FUNCTIONS ###
 
 # Find augustus_config_path
@@ -236,29 +238,34 @@ def parseIdentiPyOutput(ip_direc, joinedfile, outfile, sixframe,filter_hints):
 		createJoinedFile = subprocess.run("cat " + ip_direc + "/*.pep.xml > " + path_to_output + "/" + joinedfile, shell = True)
 		moveJoinedFile = subprocess.run("mv " + path_to_output + "/" + joinedfile + " " + ip_direc + "/",shell=True)
 		parseFile = subprocess.run("python3 " + path_to_pipeline + "/identipyToGffAndFilterAndstartHints.py " + sixframe + " " + ip_direc + "/" + joinedfile + " " + outfile + " " + str(filter_hints), shell=True)
-		sortHints = subprocess.run("sort " + outfile + "> Hints_sorted.gff",shell=True) #sort hints
-		collapseMult = subprocess.run("python3 " + path_to_pipeline + "/collapseRedundantHints.py Hints_sorted.gff Hints_collapsed.gff",shell=True)
-		mvNonred = subprocess.run("mv Hints_collapsed.gff "+ outfile, shell=True)
+		sortHints = subprocess.run("sort " + outfile + "> " + path_to_output + "/Hints_sorted.gff",shell=True) #sort hints
+		collapseMult = subprocess.run("python3 " + path_to_pipeline + "/collapseRedundantHints.py " + path_to_output + "/Hints_sorted.gff " + path_to_output + "/Hints_collapsed.gff",shell=True)
+		mvNonred = subprocess.run("mv " + path_to_output + "/Hints_collapsed.gff "+ outfile, shell=True)
 	except IOError:
 		print("I cannot join and parse IdentiPy's output files.\n")
 
-#Function for running GeneMarkS2
+#Function for running GeneMarkS-2
 def runningGMS2(genome, gm_output):
 	print("Predicting genes with GeneMarkS-2\n")
 	try:
-		if(not args.archaea):
-				runGM = subprocess.run("gms2.pl --genome-type bacteria --fnn " + gm_output +" --seq " + genome, shell=True)
+		if(transl_table==11 or transl_table==4 or transl_table==25):
+			if(not args.archaea):
+					runGM = subprocess.run("gms2.pl --genome-type bacteria --fnn " + gm_output +" --seq " + genome + " --gcode " + str(transl_table) + " --output " + path_to_output + "/gms2.lst", shell=True)
+			else:
+					runGM = subprocess.run("gms2.pl --genome-type archaea --fnn " + gm_output +" --seq " + genome + " --gcode " + str(transl_table) + " --output " + path_to_output + "/gms2.lst", shell=True)
 		else:
-				runGM = subprocess.run("gms2.pl --genome-type archaea --fnn " + gm_output +" --seq " + genome, shell=True)
+			print("WARNING: You chose translation table " + str(transl_table) + ". This is not compatible with GeneMarkS-2. Setting the translation table to 11 (default).")
+			runGM = subprocess.run("gms2.pl --genome-type bacteria --fnn " + gm_output +" --seq " + genome + " --output " + path_to_output + "/gms2.lst", shell=True)
+		
 	except:
-		print("Running GeneMarkS2 does not work properly.\n")
+		print("Running GeneMarkS-2 does not work properly.\n")
 
 def parsingGMS2Output(gm_output,gm_gff):
-	print("Parsing GeneMarkS2's output\n")
+	print("Parsing GeneMarkS-2's output\n")
 	try:
 		parseGM = subprocess.run("python3 " + path_to_pipeline + "/GMOutputToGFF.py " + gm_output + " " + gm_gff, shell=True)
 	except IOError:
-		print("Parsing GeneMarkS2's output does not work properly.\n")
+		print("Parsing GeneMarkS-2's output does not work properly.\n")
 
 def trainingAUGUSTUS(genome, training_all,cores, species):
 	print("Training AUGUSTUS\n")
@@ -324,7 +331,7 @@ def trainingAUGUSTUS(genome, training_all,cores, species):
 def optimizingAUGUSTUS(train,species,cores):
 	print("Further improving AUGUSTUS' model (this may take a while)\n")
 	if(int(cores)<=8):
-		optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(8) + " --cpus=" + str(cores) + " " + train + " > optimize.out",shell=True)
+		optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(8) + " --cpus=" + str(cores) + " " + train + " > " + path_to_output + "/" + "optimize.out",shell=True)
 	else: #many cores 
 		lineCount = 0
 		countTrainGenesHandle = open(train,"r")
@@ -332,21 +339,24 @@ def optimizingAUGUSTUS(train,species,cores):
 			lineCount += 1
 		countTrainGenesHandle.close()
 		if((int(lineCount)/int(cores))>1): #if there is at least one gene in each training file
-			optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(int(cores)) + " --cpus=" + str(cores) + " " + train + " > optimize.out",shell=True)
+			optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(int(cores)) + " --cpus=" + str(cores) + " " + train + " > " + path_to_output + "/" + "optimize.out",shell=True)
 		elif((2*int(lineCount)/(int(cores)))>1): 
-			optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(int(cores)/2) + " --cpus=" + str(cores) + " " + train + " > optimize.out",shell=True)
+			optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(int(cores)/2) + " --cpus=" + str(cores) + " " + train + " > " + path_to_output + "/" + "optimize.out",shell=True)
 		else:
-			optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(8) + " --cpus=" + str(cores) + " " + train + " > optimize.out",shell=True)
+			optAUG = subprocess.run("perl " + augustus_path + "/optimize_augustus.pl --AUGUSTUS_CONFIG_PATH=" + augustus_config_path + " --species=" + species + " --kfold=" + str(8) + " --cpus=" + str(cores) + " " + train + " > " + path_to_output + "/" + "optimize.out",shell=True)
 	finalEtrain = subprocess.run("etraining --species=" + species + " " + train, shell=True)
 
 def predictWithAUGUSTUS(genome, species, hints, outfile,ext_cfg):
 	print("Predicting genes with AUGUSTUS\n")
-	runAug = subprocess.run("augustus --species=" + species + " --extrinsicCfgFile=" + path_to_pipeline + "/"+ ext_cfg + " --hintsfile=" + hints + " " + genome + " --gff3=on --outfile=" + path_to_output + "/augustus.gff3 --errfile=" + path_to_output + "/augustus.err", shell=True)
+	runAug = subprocess.run("augustus --species=" + species + " --extrinsicCfgFile=" + ext_cfg + " --hintsfile=" + hints + " " + genome + " --gff3=on --outfile=" + path_to_output + "/augustus.gff3 --errfile=" + path_to_output + "/augustus.err", shell=True)
 	#print("augustus --species=" + species + " --extrinsicCfgFile=" + "/home/leonie/Augustus/config/species/" + species + "/" + species + "_parameters.cfg" + " --hintsfile=" +hints + " --gff3=on --outfile=augustus.gff3 --errfile=augustus.err\n")
 	parseAug = subprocess.run("python3 " + path_to_pipeline + "/AugOutputToGff.py " + path_to_output+ "/augustus.gff3 " + outfile, shell=True)
 
 def combineGMandAUGUSTUS(genemark, augustus, hints, outfile):
-	print("Combining the GeneMarkS2 and the AUGUSTUS predictions\n")
+	if(not args.use_ref):	
+		print("Combining the GeneMarkS-2 and the AUGUSTUS predictions.\n")
+	else:
+		print("Combining the reference annotation and the AUGUSTUS prediction.\n")
 	combine = subprocess.run("python3 " + path_to_pipeline + "/combineGMandAUGUSTUS.py -gm " + genemark + " -aug " + augustus + " -ext " + hints + " -o " + outfile, shell=True)
 
 def compareToRef(prediction, reference, hints, outfile):
