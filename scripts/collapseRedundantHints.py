@@ -1,10 +1,13 @@
 #! python3
 
-import re #needed for regular expressions
-import sys #needed for arguments given to the script
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
 
 # This is a script to collapse redundant hints of IdentiPy into one single line with a remark of the multiplicity of that hint.
 # This script will be used instead of sort -u in bash but after sort was done.
+
+import re #needed for regular expressions
+import sys #needed for arguments given to the script
 
 
 try:

@@ -1,14 +1,19 @@
 #! python3
 
-import re #needed for regular expressions
-import sys #needed for arguments given to the script
-import os #needed to read all the protein files given in the directory
-import subprocess
+
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
 
 #This is a script that assists the ThermoRawFileParser in converting more than one file.
 #The input is the directory in which all the raw files that need to be converted are located.
 #For the output this script will create a directory in the raw file directoy called "mzml".
 #You will find your mzml and metadata.txt files there.
+
+import re #needed for regular expressions
+import sys #needed for arguments given to the script
+import os #needed to read all the protein files given in the directory
+import subprocess
+
 
 try: #trying to assign the location of the files to two variables and to open the parameter file
 	protein_data = os.listdir(sys.argv[1]) #a list containing all the file names of the protein data in raw file format

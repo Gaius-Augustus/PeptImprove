@@ -1,9 +1,12 @@
 #!python3
 
-import re #needed for regular expressions
-import sys #needed for arguments given to the script
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
 
 ### This is a script for parsing a gff3 file (output of AUGUSTUS) to a GFF format that can be used to compare and combine GeneMark's and AUGUSTUS' outputs.
+
+import re #needed for regular expressions
+import sys #needed for arguments given to the script
 
 try:
 	file_handle_1 = open(sys.argv[1],"r")#open the gff3 file

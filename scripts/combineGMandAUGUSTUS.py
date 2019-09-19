@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-import os
-import argparse #needed for parsing the arguments
-import re #needed for regular expressions
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
 
 #This is a script that combines the output of GeneMarkS-2 and AUGUSTUS.
 #If GM and AUG differ in their predictions, AUGUSTUS' gene will be chosen if there is extrinsic evidence for this difference.
 #If not, GM's gene will be chosen.
+
+import os
+import argparse #needed for parsing the arguments
+import re #needed for regular expressions
 
 parser = argparse.ArgumentParser(description='combines the output of GeneMarkS2 and AUGUSTUS depending on extrinsic evidence')
 parser.add_argument('-gm','--genemark',type=str,required=True,

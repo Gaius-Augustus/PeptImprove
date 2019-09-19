@@ -1,14 +1,18 @@
 #! python3
 
-import re #needed for regular expressions
-import sys #needed for arguments given to the script
-import os #needed to read all the protein files given in the directory
-import subprocess
+
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
 
 #This is a script that assists IdentiPy in iterating over a directory with input files and analysing one after another.
 #The input is the directory in which all the mgf files are located.
 #For the output this script will create a directory that should be given as an argument to this script.
 #This script also needs the location of the six-frame translation of course.
+
+import re #needed for regular expressions
+import sys #needed for arguments given to the script
+import os #needed to read all the protein files given in the directory
+import subprocess
 
 try: #trying to assign the location of the files to two variables and to open the parameter file
 	protein_data = os.listdir(sys.argv[1]) #a list containing all the file names of the protein data in mgf file format

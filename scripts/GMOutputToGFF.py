@@ -1,9 +1,13 @@
 #!python3
 
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
+
+### This is a script for parsing a nucleotide list (output of GeneMark) to a GFF format that can be used by an Augustus script to create a genbank flat file format.
+
 import re #needed for regular expressions
 import sys #needed for arguments given to the script
 
-### This is a script for parsing a nucleotide list (output of GeneMark) to a GFF format that can be used by an Augustus script to create a genbank flat file format.
 
 try:
 	file_handle_1 = open(sys.argv[1],"r")#open nucleotides.lst

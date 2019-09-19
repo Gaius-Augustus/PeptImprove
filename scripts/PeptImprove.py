@@ -2,7 +2,7 @@
 
 
 #Author: Leonie Johanna Lorenz
-#Last modified: 18th September 2019
+#Last modified: 19th September 2019
 
 # PeptImprove is a pipeline for prokaryotic genome annotation.
 # Given a genome FASTA file, the species name and extrinsic evidence
@@ -23,20 +23,23 @@ import shutil
 ### ARGUMENTS ###
 parser = argparse.ArgumentParser(
     description='A pipeline for prokaryotic gene prediction using IdentiPy, GeneMarkS-2 and AUGUSTUS.')
+#required arguments:
 parser.add_argument('-g', '--genome_file', type=str,required=True,
                     help="Genome input file in FASTA format")
 parser.add_argument('-e','--extrinsic_evidence',type=str, nargs='+',required=True,
 	help="The location of the directory containing all MS data. You may name multiple directories.")
 parser.add_argument('-n','--name',type=str,required=True,
 	help="Please give the name of your species (avoid white spaces as it will also function as the name of a directory).")
+#arguments for improving a given reference annotation:
+parser.add_argument('-r','--reference_annotation',type=str,required=False,
+	help="Reference annotation is gff format. Can be used for comparing the results of for an different usage of the pipeline.")
+parser.add_argument('--use_ref',action='store_true',
+	help="Option to use reference annotation for training AUGUSTUS. GeneMarkS-2 won't be run in this version.")
+#optional arguments:
 parser.add_argument('--cores',type=int,required=False,
 	help="If you have information about the number of available cores you can enter it here. Default will be 4.")
 parser.add_argument('--re_run', action='store_true',
 	help="Option to leave out GeneMark prediction and AUGUSTUS training. Only makes sense when the pipeline was used before on the same species but with different extrinsic evidence.")
-parser.add_argument('-r','--reference_annotation',type=str,required=False,
-	help="Reference annotation is gff format. Can be used for comparing the results of for an different usage of the pipeline.")
-parser.add_argument('--use_ref',action='store_true',
-	help="Option to use reference annotation for training AUGUSTUS. GeneMarkS2 won't be run in this version.")
 parser.add_argument('--no_optimization',required=False, action='store_true',
 	help="Option to omit optimize_augustus. Only advisable if there is not enough time or computational capacity.")
 parser.add_argument('--output_directory',required=False,type=str,
@@ -47,8 +50,8 @@ parser.add_argument('--path_to_rawfileparser',required=False,type=str,
 	help="Option give the path to the directory of the ThermoRawFileParser.")
 parser.add_argument('--delete_intermediate',required=False, action='store_true',
 	help="Option to delete all results except the final one.")
-parser.add_argument('--archea',required=False, action='store_true',
-	help="Use option if species is of type Archea.")
+parser.add_argument('--archaea',required=False, action='store_true',
+	help="Use option if species is of type Archaea.")
 parser.add_argument('--translation_table',type=int,required=False,
 	help="If the translation table of the species' genome is not 11, please enter the number her. Default will be 11.")
 #The following arguments are for experts:
@@ -90,9 +93,10 @@ else:
 hints_filter = 0.001
 if(args.filter_ip):
 	hints_filter = args.filter_ip
-ext_cfg_file = "extrinsic_prok.MP.cfg"
+ext_cfg_file = "../config/extrinsic_prok.MP.cfg"
 if(args.extrinsic_cfg):
 	ext_cfg_file=args.extrinsic_cfg
+ext_cfg_file = os.path.abspath(ext_cfg_file)
 optimize = True
 if(args.no_optimization):
 	optimize = False
@@ -242,10 +246,10 @@ def parseIdentiPyOutput(ip_direc, joinedfile, outfile, sixframe,filter_hints):
 def runningGMS2(genome, gm_output):
 	print("Predicting genes with GeneMarkS-2\n")
 	try:
-		if(not args.archea):
+		if(not args.archaea):
 				runGM = subprocess.run("gms2.pl --genome-type bacteria --fnn " + gm_output +" --seq " + genome, shell=True)
 		else:
-				runGM = subprocess.run("gms2.pl --genome-type archea --fnn " + gm_output +" --seq " + genome, shell=True)
+				runGM = subprocess.run("gms2.pl --genome-type archaea --fnn " + gm_output +" --seq " + genome, shell=True)
 	except:
 		print("Running GeneMarkS2 does not work properly.\n")
 
@@ -431,7 +435,7 @@ augPred = path_to_output + "/augustus.gff"
 if(start_at <=8 and stop_at>8):
 	predictWithAUGUSTUS(genome_file_name,species,ip_hints, augPred,ext_cfg_file)
 #Calling function to join the two gene sets
-joinedPred = path_to_output + "/GMandAugCombined.gff"
+joinedPred = path_to_output + "/PeptImprove_final_prediction.gff"
 if(start_at <=9 and stop_at>9):
 	combineGMandAUGUSTUS(training_genes, augPred, ip_hints, joinedPred)
 #Calling the function to compare the results to the given reference annotation

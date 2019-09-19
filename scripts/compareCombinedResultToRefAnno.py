@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
+#Author: Leonie Johanna Lorenz
+#Last modified: 19th September 2019
+
+#Please note: This script says that a predicted gene is better than in the ref anno if there is extrinsic evidence in the part where those to genes differ.
+
 import os
 import argparse #needed for parsing the arguments
 import re #needed for regular expressions
 
-#Please not: This script says that a predicted gene is better than in the ref anno if there is extrinsic evidence in the part where those to genes differ.
+
 
 parser = argparse.ArgumentParser(description='combines the output of GeneMarkS2 and AUGUSTUS depending on extrinsic evidence')
 parser.add_argument('-p','--prediction',type=str,required=True,
