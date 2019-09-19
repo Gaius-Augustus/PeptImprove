@@ -44,15 +44,13 @@ Contents
 
 
 What is PeptImprove?
-================
+====================
 
-PeptImprove is a pipeline for making an *ab initio* genome annotations or improving existing annotations by using peptide evidence from MS/MS experiments. If an *ab initio* annotation is desired, the first gene prediction will be done by GeneMarkS-2 <b id="f1">[1]</b> which will then be used to train AUGUSTUS<b id="f2">[2]</b><b id="f3">[3]</b>. AUGUSTUS includes peptide hints into its statistical model to make a gene prediction. In the end both predictions are combined to a final prediction.
+PeptImprove is a pipeline for de novo genome annotation or for improving existing annotations by using peptide evidence from MS/MS experiments. If de novo annotation is desired, the first gene prediction will be done by GeneMarkS-2 <b id="f1">[1]</b>. Results of this step will then be used to train AUGUSTUS<b id="f2">[2,3]</b>. AUGUSTUS includes information about peptide hints into its statistical model to make gene predictions. In the end, both predictions are combined to a final gene set.
 
-Alternatively, it can be chosen to use an existing annotation for training AUGUSTUS which will in the end be combined with the AUGUSTUS prediction.
+Alternatively, it can be chosen to use an existing annotation for training AUGUSTUS and predicting genes incorporating extrinsic evidence from MS/MS experiment peptide data. This gene set will be combined with the original annotation.
 
 PeptImprove is a fully automated pipeline for genome annotation and is implemented in Python3. It automatically executes a six-frame translation program called get_orfs_or_cdss.py, the ThermoRawFileParser, IdentiPy<b id="f4">[4]</b>, GeneMarkS-2 and AUGUSTUS.
-
-PeptImprove can be used to either improve an existing reference annotation or to make an annotation from scratch in both cases using peptide evidence given by the user.
 
 
 Installation
@@ -98,7 +96,7 @@ The python3 script get_orfs_or_cdss.py uses Biopython. Install Biopython with pi
 pip3 install biopython
 ```
 
-The script get_orfs_or_cdss.py can be downloaded from <https://github.com/peterjc/pico_galaxy/blob/master/tools/get_orfs_or_cdss/get_orfs_or_cdss.py>. The pipeline is proven to work with get_orfs_or_cdss.py in version 0.2.3.
+The script get_orfs_or_cdss.py can be downloaded from <https://github.com/peterjc/pico_galaxy/blob/master/tools/get_orfs_or_cdss/get_orfs_or_cdss.py>. The pipeline has been tested with get_orfs_or_cdss.py in version 0.2.3.
 
 The ThermoRawFileParser can be obtained from <https://github.com/compomics/ThermoRawFileParser>. 
 
@@ -109,7 +107,7 @@ For example, on Ubuntu, install perl with:
 ```
 sudo apt-get install perl 
 ```
-Mono can be dowloaded from <https://www.mono-project.com/download/stable/> where also a detailed description on the dowload procedure is given.
+Mono can be dowloaded from <https://www.mono-project.com/download/stable/> where also a detailed description on the dowload procedure is available.
 
 IdentiPy can be obtained from <https://bitbucket.org/levitsky/identipy/src/default/>.
 
@@ -117,7 +115,7 @@ GeneMarkS-2 can be downloaded from <http://topaz.gatech.edu/GeneMark/license_dow
 
 The BLAST+ package which includes blastp can be downloaded in the version needed for a certain computer platform from <ftp://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/>. A detailed description on how to set up BLAST+ can be found here: <https://www.ncbi.nlm.nih.gov/books/NBK52640/>.
 
-PeptImprove runs AUGUSTUS, so its binaries are necessary, and uses the following tools provided by AUGUSTUS at <https://github.com/Gaius-Augustus/Augustus/tree/master/scripts>:
+PeptImprove runs AUGUSTUS, so its binaries are necessary, and uses the following scripts provided by AUGUSTUS at <https://github.com/Gaius-Augustus/Augustus/tree/master/scripts>:
 
 
 * aa2nonred.pl
@@ -192,25 +190,25 @@ The essential arguments for making a gene prediction with PeptImprove are:
 * ```-e EXTRINSIC_EVIDENCE [EXTRINSIC_EVIDENCE ...], --extrinsic_evidence EXTRINSIC_EVIDENCE [EXTRINSIC_EVIDENCE ...]```
  The location of the directory containing all MS data. You may name multiple directories. 
 * ```-n NAME, --name NAME```
-  Please give the name of your species (avoid white spaces as it will also function as the name of a directory).
+  Please give the name of the new to-be-created AUGUSTUS species parameter set; AUGUSTUS with this species-specific parameter set can be used indepently of PeptImprove after successful completion of the pipeline; avoid spaces
 
 
 
 Improve a given reference annotation
 ------------------
 
-If you'd like to improve an existing an existing reference annotation instead of making a new gene prediction with GeneMarkS-2, then you will have to give the following arguments:
+If you'd like to improve an existing an existing reference annotation, then you will have to give the following arguments:
 
 * ```-g GENOME_FILE, --genome_file GENOME_FILE```
   Genome input file in FASTA format
 * ```-e EXTRINSIC_EVIDENCE, --extrinsic_evidence EXTRINSIC_EVIDENCE```
  The location of one or multiple directories containing all MS data. 
 * ```-n NAME, --name NAME```
-  Please give the name of your species (avoid white spaces as it will also function as the name of a directory).
+    Please give the name of the new to-be-created AUGUSTUS species parameter set; AUGUSTUS with this species-specific parameter set can be used indepently of PeptImprove after successful completion of the pipeline; avoid spaces
 * ```-r REFERENCE_ANNOTATION, --reference_annotation REFERENCE_ANNOTATION```
-  Reference annotation is gtf format. Can be used for comparing the results of for an different usage of the pipeline.
+  Original annotation that shall be improved.
 * ```--use_ref```
-  Option to use reference annotation for training AUGUSTUS. GeneMarkS-2 won't be run in this version.
+  Option to use reference annotation for training AUGUSTUS.
 
 Please have a look at the section  [Options Explained](#options_explained) for information about options to further adapt the pipeline to your wishes. You may, for example, state how many cores are available to the pipeline, into which directory the output files should be written and whether temporary files should be deleted.
 
@@ -301,9 +299,9 @@ PeptImprove.py creates a directory that is either named and located as stated vi
 
 All other files and directories in the ```output``` directory are temporary results which are deleted by the pipeline if option --delete_intermediate is chosen. The most important and possibly interesting intermediate results are the following:
 
-* ```GffFromGMS2.gff``` - this file contains the GeneMarkS-2 gene prediction in GFF format is option --use_ref is not chosen, otherwise this file will not exist.
+* ```GffFromGMS2.gff``` - this file contains the GeneMarkS-2 gene prediction in GFF format if option --use_ref is not chosen, otherwise this file will not exist.
 
-* ```augustus.gff``` - this file contains the AUGUSTUS gene prediction in GFFF format.
+* ```augustus.gff``` - this file contains the AUGUSTUS gene prediction in GFF format.
 
 *  ```HintsByIP.gff``` - this file contains all hints created from peptive evidence by IdentiPy, namely CDSpart and start codon hints with different multiplicities.
   
@@ -354,4 +352,5 @@ References
 
 <b id="f6">[6]</b> Otto, A., Maaß, S., Lassek, C., Becher, D., Hecker, M., Riedel, K., & Sievers, S. (2016). The protein inventory of Clostridium diffcile grown in complex and minimal medium.
 *Proteomics Clinical Applications*. https://doi.org/10.1002/prca.201600069
+
 
